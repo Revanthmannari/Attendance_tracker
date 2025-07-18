@@ -1,0 +1,99 @@
+{% extends 'layout.html' %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<h1>Faculty Dashboard</h1>
+
+<div class="card">
+    <h2>Generate Daily Attendance Code</h2>
+    <button id="generate-code-btn" class="button-primary">Generate New Code</button>
+    <div id="code-display" style="margin-top: 1rem;"></div>
+</div>
+
+<div class="card">
+    <h2>Student Management</h2>
+    <a href="{{ url_for('add_student') }}" class="button-secondary">Add New Student</a>
+</div>
+
+<div class="card">
+    <h2>Reports & Analytics</h2>
+    <div class="button-group">
+        <a href="{{ url_for('analytics') }}" class="button-secondary">View Analytics</a>
+        <a href="{{ url_for('export_report') }}" class="button-secondary">Export Report (CSV)</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Full Attendance Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in report %}
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ row.date }}</td>
+                <td class="{{ 'present' if row.status == 'Present' else 'absent' }}">{{ row.status }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No attendance data found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const generateBtn = document.getElementById('generate-code-btn');
+    const codeDisplay = document.getElementById('code-display');
+
+    generateBtn.addEventListener('click', () => {
+        fetch('/api/generate_code')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    codeDisplay.innerHTML = `<p class="error">${data.error}</p>`;
+                    return;
+                }
+                
+                // Display the secret code
+                codeDisplay.innerHTML = `
+                    <p>The new attendance code is:</p>
+                    <h3 class="secret-code">${data.secret_code}</h3>
+                    <p>This code will be valid for 2 minutes.</p>
+                `;
+                
+                // Optionally, hide the code after some time
+                setTimeout(() => {
+                    codeDisplay.innerHTML = '<p>Click button to generate a new attendance code.</p>';
+                }, 120000); // 2 minutes
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                codeDisplay.innerHTML = `<p class="error">Error generating code.</p>`;
+            });
+    });
+});
+</script>
+<style>
+.secret-code {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    background-color: var(--light-color);
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    display: inline-block;
+    letter-spacing: 0.1em;
+    border: 2px dashed var(--primary-color);
+}
+</style>
+{% endblock %} 

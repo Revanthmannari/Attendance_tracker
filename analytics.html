@@ -1,0 +1,78 @@
+{% extends 'layout.html' %}
+
+{% block title %}Attendance Analytics{% endblock %}
+
+{% block content %}
+<h1>Attendance Analytics</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <div class="stat-number">{{ total_students }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Total Attendance Records</h3>
+        <div class="stat-number">{{ total_attendance }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Present Count</h3>
+        <div class="stat-number">{{ present_count }}</div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Overall Attendance Rate</h3>
+        <div class="stat-number">{{ attendance_rate }}%</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Daily Attendance (Last 7 Days)</h2>
+    <div class="daily-stats">
+        {% for day in daily_stats %}
+        <div class="day-stat">
+            <div class="date">{{ day.date }}</div>
+            <div class="attendance-bar">
+                <div class="present-bar" style="width: {{ (day.present / day.total * 100) if day.total > 0 else 0 }}%"></div>
+            </div>
+            <div class="numbers">{{ day.present }}/{{ day.total }}</div>
+        </div>
+        {% else %}
+        <p>No attendance data for the last 7 days.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Top Students by Attendance</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Present Days</th>
+                <th>Total Days</th>
+                <th>Attendance Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in top_students %}
+            <tr>
+                <td>{{ student.username }}</td>
+                <td>{{ student.present_days }}</td>
+                <td>{{ student.total_days }}</td>
+                <td>{{ "%.1f"|format((student.present_days / student.total_days * 100) if student.total_days > 0 else 0) }}%</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No student data available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 1rem;">
+    <a href="{{ url_for('faculty_dashboard') }}" class="button-secondary">Back to Dashboard</a>
+</div>
+{% endblock %} 

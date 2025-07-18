@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<h1>Student Dashboard</h1>
+
+<div class="card">
+    <h2>Mark Attendance</h2>
+    <div class="form-group">
+        <label for="secret-code">Enter Today's Attendance Code</label>
+        <input type="text" id="secret-code" name="secret-code" placeholder="e.g. BLUE72">
+    </div>
+    <button id="submit-code-btn" class="button-primary">Submit Code</button>
+    <div id="submit-result" style="margin-top: 1rem;"></div>
+</div>
+
+<div class="card">
+    <h2>Profile Management</h2>
+    <a href="{{ url_for('student_profile') }}" class="button-secondary">Manage Profile</a>
+</div>
+
+<div class="card">
+    <h2>Attendance Statistics</h2>
+    <p>Total Days: <strong>{{ stats.total }}</strong></p>
+    <p>Present: <strong class="present">{{ stats.present }}</strong></p>
+    <p>Absent: <strong class="absent">{{ stats.absent }}</strong></p>
+    <p>Attendance Rate: <strong>{{ stats.rate }}%</strong></p>
+</div>
+
+<div class="card">
+    <h2>Your Attendance History</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in history %}
+            <tr>
+                <td>{{ row.date }}</td>
+                <td class="{{ 'present' if row.status == 'Present' else 'absent' }}">{{ row.status }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2">No attendance history found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const submitBtn = document.getElementById('submit-code-btn');
+    const codeInput = document.getElementById('secret-code');
+    const submitResult = document.getElementById('submit-result');
+
+    submitBtn.addEventListener('click', () => {
+        const code = codeInput.value;
+        if (!code) {
+            submitResult.innerHTML = `<p class="error">Please enter a code.</p>`;
+            return;
+        }
+        markAttendance(code);
+    });
+
+    function markAttendance(code) {
+        fetch('/api/mark_attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            let messageClass = data.success ? 'success' : 'error';
+            submitResult.innerHTML = `<p class="${messageClass}">${data.message}</p>`;
+            if (data.success) {
+                codeInput.value = ''; // Clear input on success
+                setTimeout(() => location.reload(), 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            submitResult.innerHTML = `<p class="error">Error marking attendance.</p>`;
+        });
+    }
+});
+</script>
+{% endblock %} 
